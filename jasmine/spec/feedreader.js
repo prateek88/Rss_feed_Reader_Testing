@@ -63,7 +63,7 @@ $(function() {
          */
          it('is hidden by default', function() {
            // Does body element have meu-hidden class apllied
-           expect($('body').attr('class')).toBe('menu-hidden');
+           expect($('body').hasClass('menu-hidden')).toBe(true);
          });
 
          /* Write a test that ensures the menu changes
@@ -73,24 +73,12 @@ $(function() {
           */
           it('is displayed and hidden by clicking on menu icon', function(){
             // click on menu
-            // simulating click event, copied from following link:
-            // https://stackoverflow.com/questions/2705583/how-to-simulate-a-click-with-javascript
-            function eventFire(el, etype){
-              if (el.fireEvent) {
-                el.fireEvent('on' + etype);
-              } else {
-                var evObj = document.createEvent('Events');
-                evObj.initEvent(etype, true, false);
-                el.dispatchEvent(evObj);
-              }
-            }
-            let menuIcon = document.getElementsByClassName('menu-icon-link');
-            eventFire(menuIcon[0], 'click');
-            expect($('body').attr('class')).not.toBe('menu-hidden');
+            $('.menu-icon-link').click();
+            expect($('body').hasClass('menu-hidden')).toBe(false);
 
             //click on menu again
-            eventFire(menuIcon[0], 'click');
-            expect($('body').attr('class')).toBe('menu-hidden');
+            $('.menu-icon-link').click();
+            expect($('body').hasClass('menu-hidden')).toBe(true);
           });
     });
     /* Write a new test suite named "Initial Entries" */
@@ -108,8 +96,8 @@ $(function() {
 
          it('are loaded and show at least one entry', function(done){
            // expect at least one article with class 'entry' inside div with class 'feed'
-           let feedElement = document.querySelector('.feed');
-           expect(feedElement.children.length > 0).toBe(true);
+           let feedElement = document.querySelectorAll('.feed .entry');
+           expect(feedElement.length > 0).toBe(true);
            done();
          });
     });
@@ -118,18 +106,26 @@ $(function() {
 
         // store feed element in a variable, it will be used to comapre 2 feeds' data
         const feed = document.querySelector('.feed');
-        const firstFeed = [];
+        let feedOne = [];
+        let feedTwo = [];
 
         // AS localFeed is asynchronous, we need to use beforeEach and done
         beforeEach(function(done){
           // load first feed
-          loadFeed(0);
-          // store the data of first feed in an array
-          Array.from(feed.children).forEach(function(entry){
-            firstFeed.push(entry.innerText);
+          loadFeed(0, function(){
+            // store the data of first feed in an array
+            Array.from(feed.children).forEach(function(entry){
+              feedOne.push(entry.innerText);
+            });
+
+            // load second feed with callback
+            loadFeed(1, function(){
+              Array.from(feed.children).forEach(function(entry){
+                feedTwo.push(entry.innerText);
+              });
+            });
           });
-          // load second feed with callback
-          loadFeed(1, done);
+
         });
         /* Write a test that ensures when a new feed is loaded
          * by the loadFeed function that the content actually changes.
@@ -139,10 +135,10 @@ $(function() {
          it('changes content', function(){
            // When second feed complete loading, compare the text of this feed
            // with the previous feed data
-           Array.from(feed.children).forEach(function(entry,index){
-             console.log(entry.innerText, firstFeed[index], entry.innerText === firstFeed[index]);
+           Array.from(feedTwo).forEach(function(entry,index){
+             console.log(entry, feedOne[index], entry === feedOne[index]);
              //TODO This works. but sometimes first feed's data is not loaded
-             expect(entry.innerText === firstFeed[index]).toBe(false);
+             expect(entry === feedOne[index]).toBe(false);
            });
 
          });
